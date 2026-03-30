@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Y$LBANK</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="sidebar">
+	<div class="logo">
+<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  
+  <!-- Roof triangle -->
+  <polyline points="10,28 30,14 50,28" stroke="#c8f065" stroke-width="1.8" stroke-linejoin="round" fill="none"/>
+  <!-- Double roof line -->
+  <polyline points="13,28 30,17 47,28" stroke="#c8f065" stroke-width="1" opacity="0.4" fill="none"/>
+  
+  <!-- Top base line -->
+  <line x1="8" y1="28" x2="52" y2="28" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  
+  <!-- Pillars -->
+  <line x1="16" y1="28" x2="16" y2="46" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="24" y1="28" x2="24" y2="46" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="36" y1="28" x2="36" y2="46" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="44" y1="28" x2="44" y2="46" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Dollar sign between pillars -->
+  <text x="26" y="43" font-family="DM Mono, monospace" font-size="12" font-weight="600" fill="#c8f065">$</text>
+
+  <!-- Bottom base line -->
+  <line x1="8" y1="46" x2="52" y2="46" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Circuit lines from base — matching image -->
+  <!-- Left branch going down-left -->
+  <line x1="20" y1="46" x2="20" y2="54" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20" y1="54" x2="10" y2="54" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="10" y1="54" x2="10" y2="62" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Middle branch -->
+  <line x1="30" y1="46" x2="30" y2="58" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="30" y1="58" x2="18" y2="58" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18" y1="58" x2="18" y2="66" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Right branch -->
+  <line x1="40" y1="46" x2="40" y2="54" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="40" y1="54" x2="50" y2="54" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="50" y1="54" x2="50" y2="62" stroke="#c8f065" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Glowing dots -->
+  <circle cx="10" cy="63" r="3" fill="#c8f065"/>
+  <circle cx="10" cy="63" r="5.5" fill="#c8f065" opacity="0.15"/>
+  <circle cx="10" cy="63" r="8" fill="#c8f065" opacity="0.06"/>
+
+  <circle cx="18" cy="67" r="3" fill="#c8f065"/>
+  <circle cx="18" cy="67" r="5.5" fill="#c8f065" opacity="0.15"/>
+  <circle cx="18" cy="67" r="8" fill="#c8f065" opacity="0.06"/>
+
+  <circle cx="50" cy="63" r="3" fill="#c8f065"/>
+  <circle cx="50" cy="63" r="5.5" fill="#c8f065" opacity="0.15"/>
+  <circle cx="50" cy="63" r="8" fill="#c8f065" opacity="0.06"/>
+
+  <!-- Y$L bold text -->
+  <text x="60" y="50" font-family="DM Sans, sans-serif" font-size="28" font-weight="500" fill="#c8f065" letter-spacing="-1">Y$L</text>
+
+  <!-- BANK lighter text -->
+  <text x="108" y="50" font-family="DM Sans, sans-serif" font-size="28" font-weight="300" fill="#aaaaaa" letter-spacing="0">BANK</text>
+
+</svg>
+</div>
+			
+        <nav>
+            <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
+            <button class="nav-btn" onclick="showSection('create')">New Account</button>
+            <button class="nav-btn" onclick="showSection('deposit')">Deposit</button>
+            <button class="nav-btn" onclick="showSection('withdraw')">Withdraw</button>
+            <button class="nav-btn" onclick="showSection('transfer')">Transfer</button>
+            <button class="nav-btn" onclick="showSection('history')">History</button>
+        </nav>
+    </div>
+
+    <div class="main">
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="section active">
+            <div class="page-header">
+                <h1>Accounts</h1>
+                <button class="btn-primary" onclick="loadAccounts()">Refresh</button>
+            </div>
+            <div id="accounts-grid" class="accounts-grid"></div>
+        </section>
+
+        <!-- CREATE ACCOUNT -->
+        <section id="create" class="section">
+            <div class="page-header"><h1>New Account</h1></div>
+            <div class="card form-card">
+                <div class="form-group">
+                    <label>Account Holder Name</label>
+                    <input type="text" id="create-name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="create-accnum" placeholder="ACC001">
+                </div>
+                <div class="form-group">
+                    <label>Opening Balance (₹)</label>
+                    <input type="number" id="create-balance" placeholder="1000">
+                </div>
+                <button class="btn-primary" onclick="createAccount()">Create Account</button>
+                <div id="create-msg" class="msg"></div>
+            </div>
+        </section>
+
+        <!-- DEPOSIT -->
+        <section id="deposit" class="section">
+            <div class="page-header"><h1>Deposit</h1></div>
+            <div class="card form-card">
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="deposit-accnum" placeholder="ACC001">
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="deposit-amount" placeholder="500">
+                </div>
+                <button class="btn-primary" onclick="deposit()">Deposit</button>
+                <div id="deposit-msg" class="msg"></div>
+            </div>
+        </section>
+
+        <!-- WITHDRAW -->
+        <section id="withdraw" class="section">
+            <div class="page-header"><h1>Withdraw</h1></div>
+            <div class="card form-card">
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="withdraw-accnum" placeholder="ACC001">
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="withdraw-amount" placeholder="200">
+                </div>
+                <button class="btn-primary" onclick="withdraw()">Withdraw</button>
+                <div id="withdraw-msg" class="msg"></div>
+            </div>
+        </section>
+
+        <!-- TRANSFER -->
+        <section id="transfer" class="section">
+            <div class="page-header"><h1>Transfer</h1></div>
+            <div class="card form-card">
+                <div class="form-group">
+                    <label>From Account</label>
+                    <input type="text" id="transfer-from" placeholder="ACC001">
+                </div>
+                <div class="form-group">
+                    <label>To Account</label>
+                    <input type="text" id="transfer-to" placeholder="ACC002">
+                </div>
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="transfer-amount" placeholder="300">
+                </div>
+                <button class="btn-primary" onclick="transfer()">Transfer</button>
+                <div id="transfer-msg" class="msg"></div>
+            </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section id="history" class="section">
+            <div class="page-header"><h1>Transaction History</h1></div>
+            <div class="card form-card">
+                <div class="form-group">
+                    <label>Account Number</label>
+                    <input type="text" id="history-accnum" placeholder="ACC001">
+                </div>
+                <button class="btn-primary" onclick="loadHistory()">View History</button>
+            </div>
+            <div id="history-list" class="history-list"></div>
+        </section>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
