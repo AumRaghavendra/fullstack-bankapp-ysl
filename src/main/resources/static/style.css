@@ -282,6 +282,22 @@ nav {
     margin-bottom: 2rem;
 }
 
+#app-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 0.8rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    z-index: 100;
+}
 .auth-tabs {
     display: flex;
     gap: 0;
