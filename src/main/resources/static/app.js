@@ -1,4 +1,4 @@
-const API = 'http://localhost:8080';
+const API = 'http://fullstack-bankapp-ysl-production.up.railway.app';
 let token = localStorage.getItem('token');
 
 // Check if already logged in
