@@ -1,8 +1,12 @@
 # Y$L Bank 🏦
 
-A full-stack banking REST API built with Spring Boot and MySQL, with a clean frontend UI.
+A basic full-stack banking REST API built with Spring Boot and MySQL, with a clean frontend UI.
+
+## 🌐 Live Demo
+**[https://fullstack-bankapp-ysl-production.up.railway.app](https://fullstack-bankapp-ysl-production.up.railway.app)**
 
 ## Features
+- JWT Authentication (Register/Login)
 - Create and manage bank accounts
 - Deposit, withdraw and transfer funds
 - Transaction history with timestamps
@@ -15,21 +19,24 @@ A full-stack banking REST API built with Spring Boot and MySQL, with a clean fro
 | Backend | Java 21, Spring Boot 3.x |
 | Database | MySQL 8, Hibernate/JPA |
 | Frontend | HTML, CSS, Vanilla JS |
+| Security | Spring Security, JWT |
 | Build Tool | Maven |
+| Deployment | Railway |
 
 ## Project Structure
-```
 src/main/java/com/bank/bankapp/
 ├── controller/    → REST endpoints
 ├── service/       → Business logic
 ├── repository/    → Database access
 ├── model/         → Entity classes
+├── security/      → JWT Auth
 └── exception/     → Error handling
-```
 
 ## API Endpoints
 | Method | Endpoint | Description |
 |--------|---------|-------------|
+| POST | /auth/register | Register user |
+| POST | /auth/login | Login & get JWT token |
 | POST | /accounts | Create account |
 | GET | /accounts | Get all accounts |
 | GET | /accounts/{accountNumber} | Get one account |
@@ -39,9 +46,3 @@ src/main/java/com/bank/bankapp/
 | GET | /accounts/{accountNumber}/transactions | Transaction history |
 | DELETE | /accounts/{accountNumber} | Delete account |
 
-## Setup
-1. Clone the repo
-2. Create MySQL database: `CREATE DATABASE bankdb;`
-3. Update `application.properties` with your MySQL password
-4. Run `BankappApplication.java`
-5. Open `http://localhost:8080`
