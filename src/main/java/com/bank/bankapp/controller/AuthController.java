@@ -20,6 +20,16 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
+        // Check username already exists
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username already taken!");
+        }
+        
+        // Check password has special character
+        if (!user.getPassword().matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
+            return ResponseEntity.badRequest().body("Password must contain at least one special character!");
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole("USER");
         userRepository.save(user);
@@ -34,4 +44,5 @@ public class AuthController {
         String token = jwtUtil.generateToken(user.getUsername());
         return ResponseEntity.ok(token);
     }
+    
 }
