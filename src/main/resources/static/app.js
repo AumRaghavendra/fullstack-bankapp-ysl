@@ -1,7 +1,7 @@
 const API = 'https://fullstack-bankapp-ysl.onrender.com';
 let token = localStorage.getItem('token');
 
-// Check if already logged in
+// check if already logged in
 window.onload = () => {
     if (token) showApp();
     else showAuth();
@@ -18,7 +18,7 @@ function showAuth() {
     document.getElementById('app-page').style.display = 'none';
 }
 
-// Auth tab switch
+// auth tab switch
 function switchTab(tab) {
     document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
@@ -26,27 +26,43 @@ function switchTab(tab) {
     document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
 }
 
-// Register
+// register
 async function register() {
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
+
+    // frontend validation before even hitting the server
+    if (!username || username.trim() === '') {
+        showMsg('register-msg', '✗ Username cannot be empty.', 'error');
+        return;
+    }
+    if (!/[A-Z]/.test(password)) {
+        showMsg('register-msg', '✗ Password must contain at least one uppercase letter.', 'error');
+        return;
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]/.test(password)) {
+        showMsg('register-msg', '✗ Password must contain at least one special character.', 'error');
+        return;
+    }
+
     try {
         const res = await fetch(`${API}/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
+        const msg = await res.text();
         if (res.ok) {
             showMsg('register-msg', '✓ Registered! Please login.', 'success');
         } else {
-            showMsg('register-msg', '✗ Registration failed.', 'error');
+            showMsg('register-msg', '✗ ' + msg, 'error');
         }
     } catch (e) {
         showMsg('register-msg', '✗ Could not connect.', 'error');
     }
 }
 
-// Login
+// login
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -68,14 +84,14 @@ async function login() {
     }
 }
 
-// Logout
+// logout
 function logout() {
     localStorage.removeItem('token');
     token = null;
     showAuth();
 }
 
-// Auth headers helper
+// auth headers helper
 function authHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -83,7 +99,7 @@ function authHeaders() {
     };
 }
 
-// Navigation
+// navigation
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -92,14 +108,14 @@ function showSection(id) {
     if (id === 'dashboard') loadAccounts();
 }
 
-// Show messages
+// show messages
 function showMsg(id, text, type) {
     const el = document.getElementById(id);
     el.textContent = text;
     el.className = 'msg ' + type;
 }
 
-// Load all accounts
+// account loadin
 async function loadAccounts() {
     const grid = document.getElementById('accounts-grid');
     grid.innerHTML = '<div class="empty-state">Loading...</div>';
@@ -124,7 +140,7 @@ async function loadAccounts() {
     }
 }
 
-// Create account
+// acc creation
 async function createAccount() {
     const name = document.getElementById('create-name').value;
     const accNum = document.getElementById('create-accnum').value;
@@ -149,7 +165,7 @@ async function createAccount() {
     }
 }
 
-// Deposit
+// deposit
 async function deposit() {
     const accNum = document.getElementById('deposit-accnum').value;
     const amount = document.getElementById('deposit-amount').value;
@@ -170,7 +186,7 @@ async function deposit() {
     }
 }
 
-// Withdraw
+// withdraw
 async function withdraw() {
     const accNum = document.getElementById('withdraw-accnum').value;
     const amount = document.getElementById('withdraw-amount').value;
