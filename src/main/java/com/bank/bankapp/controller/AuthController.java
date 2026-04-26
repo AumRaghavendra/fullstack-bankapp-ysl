@@ -21,14 +21,22 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
 
+        // Check username already exists
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists!");
         }
 
+        // Check password has at least one uppercase letter
         if (!user.getPassword().matches(".*[A-Z].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one uppercase letter!");
         }
 
+        // Check password has at least one number
+        if (!user.getPassword().matches(".*[0-9].*")) {
+            return ResponseEntity.badRequest().body("Password must contain at least one number!");
+        }
+
+        // Check password has at least one special character
         if (!user.getPassword().matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one special character!");
         }

@@ -178,6 +178,42 @@ nav {
 }
 
 .form-group input:focus { border-color: var(--accent); }
+
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 3rem;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: color 0.15s ease;
+}
+
+.eye-btn:hover {
+    color: var(--accent);
+}
+
+.eye-icon {
+    width: 18px;
+    height: 18px;
+}
+
+
 .form-group input::placeholder { color: var(--text-muted); }
 
 .btn-primary {
