@@ -55,14 +55,15 @@ public class AuthController {
             authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
             );
-            String token = jwtUtil.generateToken(user.getUsername());
 
-            // fetch role from db so frontend knows whether to show admin dashboard
+            // fetch role FIRST
             String role = userRepository.findByUsername(user.getUsername())
                     .map(u -> u.getRole())
                     .orElse("USER");
 
-            // return token and role together as a json object
+            // THEN generate token using the role
+            String token = jwtUtil.generateToken(user.getUsername(), role);
+
             return ResponseEntity.ok(Map.of("token", token, "role", role));
 
         } catch (BadCredentialsException e) {

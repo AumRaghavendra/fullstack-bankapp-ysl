@@ -27,9 +27,10 @@ public class BankAccountController {
 
     // helper — get role of the currently logged in user from the database
     private String getRole(Authentication auth) {
-        return userRepository.findByUsername(auth.getName())
-                .map(u -> u.getRole())
-                .orElse("USER");
+        return auth.getAuthorities().stream()
+            .findFirst()
+            .map(a -> a.getAuthority().replace("ROLE_", ""))
+            .orElse("USER");
     }
 
     @PostMapping

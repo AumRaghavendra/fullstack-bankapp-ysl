@@ -28,6 +28,10 @@ function showApp() {
         el.style.display = userRole === 'ADMIN' ? 'block' : 'none';
     });
 
+    // show admin banner
+    const banner = document.getElementById('admin-banner');
+    if (banner) banner.style.display = userRole === 'ADMIN' ? 'block' : 'none';
+
     loadAccounts();
 }
 
@@ -149,12 +153,16 @@ async function loadAccounts() {
     const grid = document.getElementById('accounts-grid');
     grid.innerHTML = '<div class="empty-state">Loading...</div>';
     try {
+		const ownerTag = userRole === 'ADMIN' 
+		    ? `<span class="account-owner">👤 ${acc.username}</span>` 
+		    : '';
         const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
         if (res.status === 401 || res.status === 403) { logout(); return; }
         const accounts = await res.json();
         if (accounts.length === 0) {
             grid.innerHTML = '<div class="empty-state">No accounts yet. Create one!</div>';
             return;
+			
         }
         grid.innerHTML = accounts.map(acc => `
             <div class="account-card">
