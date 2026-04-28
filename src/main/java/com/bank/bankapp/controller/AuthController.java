@@ -9,6 +9,8 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -21,22 +23,22 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody User user) {
 
-        // Check username already exists
+        // check username already exists
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists!");
         }
 
-        // Check password has at least one uppercase letter
+        // check password has at least one uppercase letter
         if (!user.getPassword().matches(".*[A-Z].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one uppercase letter!");
         }
 
-        // Check password has at least one number
+        // check password has at least one number
         if (!user.getPassword().matches(".*[0-9].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one number!");
         }
 
-        // Check password has at least one special character
+        // check password has at least one special character
         if (!user.getPassword().matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\",./<>?].*")) {
             return ResponseEntity.badRequest().body("Password must contain at least one special character!");
         }
@@ -48,13 +50,21 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody User user) {
         try {
             authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
             );
             String token = jwtUtil.generateToken(user.getUsername());
-            return ResponseEntity.ok(token);
+
+            // fetch role from db so frontend knows whether to show admin dashboard
+            String role = userRepository.findByUsername(user.getUsername())
+                    .map(u -> u.getRole())
+                    .orElse("USER");
+
+            // return token and role together as a json object
+            return ResponseEntity.ok(Map.of("token", token, "role", role));
+
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body("Invalid username or password!");
         }

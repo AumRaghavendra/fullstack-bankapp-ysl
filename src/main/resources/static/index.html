@@ -44,11 +44,11 @@
             <div id="login-form">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="login-username" placeholder="john">
+                    <input type="text" id="login-username" autocomplete="username" placeholder="john">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="login-password" placeholder="••••••••">
+                    <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
                 </div>
                 <button class="btn-primary full-width" onclick="login()">Login</button>
                 <div id="login-msg" class="msg"></div>
@@ -58,11 +58,11 @@
             <div id="register-form" style="display:none">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="reg-username" placeholder="john">
+                    <input type="text" id="reg-username" autocomplete="off" placeholder="john">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="reg-password" placeholder="••••••••">
+                    <input type="password" id="reg-password" autocomplete="new-password" placeholder="••••••••">
                 </div>
                 <button class="btn-primary full-width" onclick="register()">Register</button>
                 <div id="register-msg" class="msg"></div>
@@ -103,6 +103,7 @@
                 <button class="nav-btn" onclick="showSection('withdraw')">Withdraw</button>
                 <button class="nav-btn" onclick="showSection('transfer')">Transfer</button>
                 <button class="nav-btn" onclick="showSection('history')">History</button>
+                <button class="nav-btn admin-only" onclick="showSection('admin-users')" style="display:none;">All Users</button>
             </nav>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
@@ -211,7 +212,7 @@
     <script src="app.js"></script>
     <footer id="app-footer">
     <p>© 2026 Y$L Bank. All rights reserved.</p>
-    <p>Built with Spring Boot · MySQL · JWT · Deployed on Railway</p>
+    <p>Built with Spring Boot · MySQL · JWT · Deployed on Render</p>
 </footer>
 </body>
 </html>

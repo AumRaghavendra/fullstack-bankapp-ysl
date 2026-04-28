@@ -1,6 +1,6 @@
 const API = 'https://fullstack-bankapp-ysl.onrender.com';
 
-// password visibility toggle
+// toggle password visibility
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
     const isPassword = input.type === 'password';
@@ -10,10 +10,10 @@ function togglePassword(inputId, btn) {
         : `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 }
 
-
 let token = localStorage.getItem('token');
+let userRole = localStorage.getItem('role');
 
-// check if already logged in
+// check if already logged in on page load
 window.onload = () => {
     if (token) showApp();
     else showAuth();
@@ -22,6 +22,12 @@ window.onload = () => {
 function showApp() {
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display = 'flex';
+
+    // show or hide admin nav buttons based on role
+    document.querySelectorAll('.admin-only').forEach(el => {
+        el.style.display = userRole === 'ADMIN' ? 'block' : 'none';
+    });
+
     loadAccounts();
 }
 
@@ -38,12 +44,12 @@ function switchTab(tab) {
     document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
 }
 
-// reg
+// register
 async function register() {
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
 
-    // frontend validation before even hitting the server
+    // frontend validation before hitting the server
     if (!username || username.trim() === '') {
         showMsg('register-msg', '✗ Username cannot be empty.', 'error');
         return;
@@ -78,7 +84,7 @@ async function register() {
     }
 }
 
-// login
+// login — now reads token + role from json response
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -89,11 +95,15 @@ async function login() {
             body: JSON.stringify({ username, password })
         });
         if (res.ok) {
-            token = await res.text();
+            const data = await res.json();
+            token = data.token;
+            userRole = data.role;
             localStorage.setItem('token', token);
+            localStorage.setItem('role', userRole);
             showApp();
         } else {
-            showMsg('login-msg', '✗ Invalid credentials.', 'error');
+            const err = await res.text();
+            showMsg('login-msg', '✗ ' + err, 'error');
         }
     } catch (e) {
         showMsg('login-msg', '✗ Could not connect.', 'error');
@@ -103,11 +113,13 @@ async function login() {
 // logout
 function logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     token = null;
+    userRole = null;
     showAuth();
 }
 
-// auth headers help
+// auth headers helper
 function authHeaders() {
     return {
         'Content-Type': 'application/json',
@@ -115,23 +127,24 @@ function authHeaders() {
     };
 }
 
-//navigation
+// navigation
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     event.target.classList.add('active');
     if (id === 'dashboard') loadAccounts();
+    if (id === 'admin-users') loadAllUsers();
 }
 
-//show messages
+// show messages
 function showMsg(id, text, type) {
     const el = document.getElementById(id);
     el.textContent = text;
     el.className = 'msg ' + type;
 }
 
-//load all accounts
+// load accounts — backend already filters by role so no changes needed here
 async function loadAccounts() {
     const grid = document.getElementById('accounts-grid');
     grid.innerHTML = '<div class="empty-state">Loading...</div>';
@@ -147,6 +160,7 @@ async function loadAccounts() {
             <div class="account-card">
                 <div class="acc-name">${acc.accountHolderName}</div>
                 <div class="acc-number">${acc.accountNumber}</div>
+                ${userRole === 'ADMIN' ? `<div class="acc-owner">Owner: ${acc.username}</div>` : ''}
                 <div class="acc-balance">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
                 <div class="acc-balance-label">Available Balance</div>
             </div>
@@ -156,7 +170,34 @@ async function loadAccounts() {
     }
 }
 
-//create account
+// admin only — load all registered users
+async function loadAllUsers() {
+    const list = document.getElementById('users-list');
+    if (!list) return;
+    list.innerHTML = '<div class="empty-state">Loading...</div>';
+    try {
+        const res = await fetch(`${API}/accounts/admin/users`, { headers: authHeaders() });
+        if (res.status === 403) {
+            list.innerHTML = '<div class="empty-state">Access denied.</div>';
+            return;
+        }
+        const users = await res.json();
+        if (users.length === 0) {
+            list.innerHTML = '<div class="empty-state">No users found.</div>';
+            return;
+        }
+        list.innerHTML = users.map((u, i) => `
+            <div class="user-row">
+                <span class="user-index">#${i + 1}</span>
+                <span class="user-name">${u}</span>
+            </div>
+        `).join('');
+    } catch (e) {
+        list.innerHTML = '<div class="empty-state">Could not load users.</div>';
+    }
+}
+
+// create account
 async function createAccount() {
     const name = document.getElementById('create-name').value;
     const accNum = document.getElementById('create-accnum').value;
@@ -181,7 +222,7 @@ async function createAccount() {
     }
 }
 
-//deposit
+// deposit
 async function deposit() {
     const accNum = document.getElementById('deposit-accnum').value;
     const amount = document.getElementById('deposit-amount').value;
@@ -202,7 +243,7 @@ async function deposit() {
     }
 }
 
-//withdraw
+// withdraw
 async function withdraw() {
     const accNum = document.getElementById('withdraw-accnum').value;
     const amount = document.getElementById('withdraw-amount').value;
@@ -223,7 +264,7 @@ async function withdraw() {
     }
 }
 
-//transfer
+// transfer
 async function transfer() {
     const from = document.getElementById('transfer-from').value;
     const to = document.getElementById('transfer-to').value;
@@ -245,7 +286,7 @@ async function transfer() {
     }
 }
 
-//transaction history
+// transaction history
 async function loadHistory() {
     const accNum = document.getElementById('history-accnum').value;
     const list = document.getElementById('history-list');

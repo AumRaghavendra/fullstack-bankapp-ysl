@@ -17,6 +17,9 @@ public class BankAccount {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    // tracks which user owns this account
+    private String username;
+
     @NotBlank(message = "Account holder name cannot be empty!")
     private String accountHolderName;
 
@@ -29,7 +32,8 @@ public class BankAccount {
 
     public BankAccount() {}
 
-    public BankAccount(String accountHolderName, String accountNumber, double balance) {
+    public BankAccount(String username, String accountHolderName, String accountNumber, double balance) {
+        this.username = username;
         this.accountHolderName = accountHolderName;
         this.accountNumber = accountNumber;
         this.balance = balance;
@@ -37,6 +41,8 @@ public class BankAccount {
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
     public String getAccountHolderName() { return accountHolderName; }
     public void setAccountHolderName(String accountHolderName) { this.accountHolderName = accountHolderName; }
     public String getAccountNumber() { return accountNumber; }
