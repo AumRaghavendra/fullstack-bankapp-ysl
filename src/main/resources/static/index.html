@@ -14,24 +14,16 @@
         <div class="auth-container">
             <div class="auth-logo">
                 <svg width="260" height="104" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- roof -->
                   <polyline points="10,28 30,14 50,28" stroke="#c8f065" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
-                  <!-- roof base line -->
                   <line x1="6" y1="28" x2="54" y2="28" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- 4 outer pillars -->
                   <line x1="12" y1="28" x2="12" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="22" y1="28" x2="22" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="38" y1="28" x2="38" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="48" y1="28" x2="48" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- center pillar — solid filled block -->
                   <rect x="26" y="28" width="8" height="20" rx="1" fill="#c8f065"/>
-                  <!-- $ carved into center pillar in dark -->
                   <text x="30" y="43" font-family="DM Mono, monospace" font-size="11" font-weight="800" fill="#1a1a2e" text-anchor="middle">$</text>
-                  <!-- base line -->
                   <line x1="6" y1="48" x2="54" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- Y$L bold text -->
                   <text x="62" y="44" font-family="DM Sans, sans-serif" font-size="28" font-weight="500" fill="#c8f065" letter-spacing="-1">Y$L</text>
-                  <!-- BANK lighter text -->
                   <text x="110" y="41" font-family="DM Sans, sans-serif" font-size="20" font-weight="300" fill="#aaaaaa" letter-spacing="1">BANK</text>
                 </svg>
             </div>
@@ -48,7 +40,12 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+                    <div class="password-wrapper">
+                        <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
+                        <button class="eye-btn" onclick="togglePassword('login-password', this)">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <button class="btn-primary full-width" onclick="login()">Login</button>
                 <div id="login-msg" class="msg"></div>
@@ -62,7 +59,12 @@
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="reg-password" autocomplete="new-password" placeholder="••••••••">
+                    <div class="password-wrapper">
+                        <input type="password" id="reg-password" autocomplete="new-password" placeholder="••••••••">
+                        <button class="eye-btn" onclick="togglePassword('reg-password', this)">
+                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
                 </div>
                 <button class="btn-primary full-width" onclick="register()">Register</button>
                 <div id="register-msg" class="msg"></div>
@@ -70,58 +72,57 @@
         </div>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- MAIN APP — USER VIEW -->
     <div id="app-page" style="display:none">
         <div class="sidebar">
             <div class="logo">
                 <svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <!-- roof -->
                   <polyline points="10,28 30,14 50,28" stroke="#c8f065" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
-                  <!-- roof base line -->
                   <line x1="6" y1="28" x2="54" y2="28" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- 4 outer pillars -->
                   <line x1="12" y1="28" x2="12" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="22" y1="28" x2="22" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="38" y1="28" x2="38" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
                   <line x1="48" y1="28" x2="48" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- center pillar — solid filled block -->
                   <rect x="26" y="28" width="8" height="20" rx="1" fill="#c8f065"/>
-                  <!-- $ carved into center pillar in dark -->
                   <text x="30" y="43" font-family="DM Mono, monospace" font-size="11" font-weight="800" fill="#1a1a2e" text-anchor="middle">$</text>
-                  <!-- base line -->
                   <line x1="6" y1="48" x2="54" y2="48" stroke="#c8f065" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- Y$L bold text -->
                   <text x="62" y="44" font-family="DM Sans, sans-serif" font-size="28" font-weight="500" fill="#c8f065" letter-spacing="-1">Y$L</text>
-                  <!-- BANK lighter text -->
                   <text x="110" y="41" font-family="DM Sans, sans-serif" font-size="20" font-weight="300" fill="#aaaaaa" letter-spacing="1">BANK</text>
                 </svg>
             </div>
-            <nav>
+            <!-- user nav — hidden for admin -->
+            <nav id="user-nav">
                 <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
                 <button class="nav-btn" onclick="showSection('create')">New Account</button>
                 <button class="nav-btn" onclick="showSection('deposit')">Deposit</button>
                 <button class="nav-btn" onclick="showSection('withdraw')">Withdraw</button>
                 <button class="nav-btn" onclick="showSection('transfer')">Transfer</button>
                 <button class="nav-btn" onclick="showSection('history')">History</button>
-                <button class="nav-btn admin-only" onclick="showSection('admin-users')" style="display:none;">All Users</button>
+            </nav>
+            <!-- admin nav — hidden for user -->
+            <nav id="admin-nav" style="display:none">
+                <button class="nav-btn admin-nav-btn active" onclick="showAdminSection('admin-panel')">🛡️ Overview</button>
+                <button class="nav-btn admin-nav-btn" onclick="showAdminSection('admin-accounts')">All Accounts</button>
+                <button class="nav-btn admin-nav-btn" onclick="showAdminSection('admin-users-section')">All Users</button>
             </nav>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
 
         <div class="main">
+
+            <!-- ===== USER SECTIONS ===== -->
+
             <!-- Dashboard -->
-            
-            <!-- Dashboard -->
-			<section id="dashboard" class="section active">
-			    <div id="admin-banner" class="admin-banner" style="display:none;">
-			        🛡️ Admin Mode — view all accounts across all users
-			    </div>
-			    <div class="page-header">
-			        <h1>Accounts</h1>
-			        <button class="btn-primary" onclick="loadAccounts()">Refresh</button>
-			    </div>
-			    <div id="accounts-grid" class="accounts-grid"></div>
-			</section>
+            <section id="dashboard" class="section active">
+                <div class="page-header">
+                    <div>
+                        <p class="welcome-label">Welcome back,</p>
+                        <h1 id="welcome-username">—</h1>
+                    </div>
+                    <button class="btn-primary" onclick="loadAccounts()">Refresh</button>
+                </div>
+                <div id="accounts-grid" class="accounts-grid"></div>
+            </section>
 
             <!-- Create -->
             <section id="create" class="section">
@@ -211,18 +212,77 @@
                 </div>
                 <div id="history-list" class="history-list"></div>
             </section>
+
+            <!-- ===== ADMIN SECTIONS ===== -->
+
+            <!-- Admin Overview Panel -->
+            <section id="admin-panel" class="section">
+                <div class="admin-page-header">
+                    <div>
+                        <p class="admin-label">🛡️ Admin Panel</p>
+                        <h1 id="admin-welcome-username">—</h1>
+                    </div>
+                    <button class="btn-admin" onclick="loadAdminPanel()">Refresh</button>
+                </div>
+
+                <!-- Stats row -->
+                <div class="admin-stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Users</div>
+                        <div class="stat-value" id="stat-users">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Accounts</div>
+                        <div class="stat-value" id="stat-accounts">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Deposits in Bank</div>
+                        <div class="stat-value" id="stat-balance">—</div>
+                    </div>
+                </div>
+
+                <!-- Recent accounts preview -->
+                <div class="admin-section-title">Recent Accounts</div>
+                <div id="admin-recent-accounts" class="admin-table-wrap">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Admin — All Accounts -->
+            <section id="admin-accounts" class="section">
+                <div class="admin-page-header">
+                    <div>
+                        <p class="admin-label">🛡️ Admin Panel</p>
+                        <h1>All Accounts</h1>
+                    </div>
+                    <button class="btn-admin" onclick="loadAdminAccounts()">Refresh</button>
+                </div>
+                <div id="admin-accounts-table" class="admin-table-wrap">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </section>
+
+            <!-- Admin — All Users -->
+            <section id="admin-users-section" class="section">
+                <div class="admin-page-header">
+                    <div>
+                        <p class="admin-label">🛡️ Admin Panel</p>
+                        <h1>All Users</h1>
+                    </div>
+                    <button class="btn-admin" onclick="loadAdminUsers()">Refresh</button>
+                </div>
+                <div id="admin-users-table" class="admin-table-wrap">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </section>
+
         </div>
-        <!-- Admin Users -->
-		<section id="admin-users" class="section">
-		    <div class="page-header"><h1>All Registered Users</h1></div>
-		    <div id="users-list" class="users-list"></div>
-		</section>
     </div>
 
     <script src="app.js"></script>
     <footer id="app-footer">
-    <p>© 2026 Y$L Bank. All rights reserved.</p>
-    <p>Built with Spring Boot · MySQL · JWT · Deployed on Render</p>
-</footer>
+        <p>© 2026 Y$L Bank. All rights reserved.</p>
+        <p>Built with Spring Boot · PostgreSQL · JWT · Deployed on Render</p>
+    </footer>
 </body>
 </html>

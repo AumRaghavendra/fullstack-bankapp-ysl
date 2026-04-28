@@ -12,6 +12,7 @@ function togglePassword(inputId, btn) {
 
 let token = localStorage.getItem('token');
 let userRole = localStorage.getItem('role');
+let loggedInUsername = localStorage.getItem('username');
 
 // check if already logged in on page load
 window.onload = () => {
@@ -23,16 +24,28 @@ function showApp() {
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display = 'flex';
 
-    // show or hide admin nav buttons based on role
-    document.querySelectorAll('.admin-only').forEach(el => {
-        el.style.display = userRole === 'ADMIN' ? 'block' : 'none';
-    });
-
-    // show admin banner
-    const banner = document.getElementById('admin-banner');
-    if (banner) banner.style.display = userRole === 'ADMIN' ? 'block' : 'none';
-
-    loadAccounts();
+    if (userRole === 'ADMIN') {
+        // show admin nav, hide user nav
+        document.getElementById('user-nav').style.display = 'none';
+        document.getElementById('admin-nav').style.display = 'flex';
+        // hide all user sections, show admin panel
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('admin-panel').classList.add('active');
+        // set admin welcome name
+        const adminWelcome = document.getElementById('admin-welcome-username');
+        if (adminWelcome) adminWelcome.textContent = loggedInUsername || 'Admin';
+        loadAdminPanel();
+    } else {
+        // show user nav, hide admin nav
+        document.getElementById('user-nav').style.display = 'flex';
+        document.getElementById('admin-nav').style.display = 'none';
+        // set welcome name
+        const welcomeEl = document.getElementById('welcome-username');
+        if (welcomeEl) welcomeEl.textContent = loggedInUsername || 'there';
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('dashboard').classList.add('active');
+        loadAccounts();
+    }
 }
 
 function showAuth() {
@@ -53,7 +66,6 @@ async function register() {
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
 
-    // frontend validation before hitting the server
     if (!username || username.trim() === '') {
         showMsg('register-msg', '✗ Username cannot be empty.', 'error');
         return;
@@ -88,7 +100,7 @@ async function register() {
     }
 }
 
-// login — now reads token + role from json response
+// login
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -102,8 +114,10 @@ async function login() {
             const data = await res.json();
             token = data.token;
             userRole = data.role;
+            loggedInUsername = username;
             localStorage.setItem('token', token);
             localStorage.setItem('role', userRole);
+            localStorage.setItem('username', loggedInUsername);
             showApp();
         } else {
             const err = await res.text();
@@ -118,8 +132,10 @@ async function login() {
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('username');
     token = null;
     userRole = null;
+    loggedInUsername = null;
     showAuth();
 }
 
@@ -131,14 +147,24 @@ function authHeaders() {
     };
 }
 
-// navigation
+// USER navigation
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('#user-nav .nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     event.target.classList.add('active');
     if (id === 'dashboard') loadAccounts();
-    if (id === 'admin-users') loadAllUsers();
+}
+
+// ADMIN navigation
+function showAdminSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('#admin-nav .nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    if (id === 'admin-panel') loadAdminPanel();
+    if (id === 'admin-accounts') loadAdminAccounts();
+    if (id === 'admin-users-section') loadAdminUsers();
 }
 
 // show messages
@@ -148,27 +174,23 @@ function showMsg(id, text, type) {
     el.className = 'msg ' + type;
 }
 
-// load accounts — backend already filters by role so no changes needed here
+// ===== USER FUNCTIONS =====
+
 async function loadAccounts() {
     const grid = document.getElementById('accounts-grid');
     grid.innerHTML = '<div class="empty-state">Loading...</div>';
     try {
-		const ownerTag = userRole === 'ADMIN' 
-		    ? `<span class="account-owner">👤 ${acc.username}</span>` 
-		    : '';
         const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
         if (res.status === 401 || res.status === 403) { logout(); return; }
         const accounts = await res.json();
         if (accounts.length === 0) {
             grid.innerHTML = '<div class="empty-state">No accounts yet. Create one!</div>';
             return;
-			
         }
         grid.innerHTML = accounts.map(acc => `
             <div class="account-card">
                 <div class="acc-name">${acc.accountHolderName}</div>
                 <div class="acc-number">${acc.accountNumber}</div>
-                ${userRole === 'ADMIN' ? `<div class="acc-owner">Owner: ${acc.username}</div>` : ''}
                 <div class="acc-balance">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
                 <div class="acc-balance-label">Available Balance</div>
             </div>
@@ -178,34 +200,6 @@ async function loadAccounts() {
     }
 }
 
-// admin only — load all registered users
-async function loadAllUsers() {
-    const list = document.getElementById('users-list');
-    if (!list) return;
-    list.innerHTML = '<div class="empty-state">Loading...</div>';
-    try {
-        const res = await fetch(`${API}/accounts/admin/users`, { headers: authHeaders() });
-        if (res.status === 403) {
-            list.innerHTML = '<div class="empty-state">Access denied.</div>';
-            return;
-        }
-        const users = await res.json();
-        if (users.length === 0) {
-            list.innerHTML = '<div class="empty-state">No users found.</div>';
-            return;
-        }
-        list.innerHTML = users.map((u, i) => `
-            <div class="user-row">
-                <span class="user-index">#${i + 1}</span>
-                <span class="user-name">${u}</span>
-            </div>
-        `).join('');
-    } catch (e) {
-        list.innerHTML = '<div class="empty-state">Could not load users.</div>';
-    }
-}
-
-// create account
 async function createAccount() {
     const name = document.getElementById('create-name').value;
     const accNum = document.getElementById('create-accnum').value;
@@ -230,7 +224,6 @@ async function createAccount() {
     }
 }
 
-// deposit
 async function deposit() {
     const accNum = document.getElementById('deposit-accnum').value;
     const amount = document.getElementById('deposit-amount').value;
@@ -251,7 +244,6 @@ async function deposit() {
     }
 }
 
-// withdraw
 async function withdraw() {
     const accNum = document.getElementById('withdraw-accnum').value;
     const amount = document.getElementById('withdraw-amount').value;
@@ -272,7 +264,6 @@ async function withdraw() {
     }
 }
 
-// transfer
 async function transfer() {
     const from = document.getElementById('transfer-from').value;
     const to = document.getElementById('transfer-to').value;
@@ -294,7 +285,6 @@ async function transfer() {
     }
 }
 
-// transaction history
 async function loadHistory() {
     const accNum = document.getElementById('history-accnum').value;
     const list = document.getElementById('history-list');
@@ -318,5 +308,140 @@ async function loadHistory() {
         `).join('');
     } catch (e) {
         list.innerHTML = '<div class="empty-state">Could not load history.</div>';
+    }
+}
+
+// ===== ADMIN FUNCTIONS =====
+
+async function loadAdminPanel() {
+    // load stats and recent accounts in parallel
+    try {
+        const [accountsRes, usersRes] = await Promise.all([
+            fetch(`${API}/accounts`, { headers: authHeaders() }),
+            fetch(`${API}/accounts/admin/users`, { headers: authHeaders() })
+        ]);
+
+        const accounts = await accountsRes.json();
+        const users = await usersRes.json();
+
+        const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
+
+        document.getElementById('stat-users').textContent = users.length;
+        document.getElementById('stat-accounts').textContent = accounts.length;
+        document.getElementById('stat-balance').textContent =
+            '₹' + totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+
+        // show last 5 accounts as preview
+        const recent = accounts.slice(-5).reverse();
+        const wrap = document.getElementById('admin-recent-accounts');
+        if (recent.length === 0) {
+            wrap.innerHTML = '<div class="empty-state">No accounts yet.</div>';
+            return;
+        }
+        wrap.innerHTML = buildAccountsTable(recent);
+
+    } catch (e) {
+        document.getElementById('admin-recent-accounts').innerHTML =
+            '<div class="empty-state">Could not load data.</div>';
+    }
+}
+
+async function loadAdminAccounts() {
+    const wrap = document.getElementById('admin-accounts-table');
+    wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+    try {
+        const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
+        const accounts = await res.json();
+        if (accounts.length === 0) {
+            wrap.innerHTML = '<div class="empty-state">No accounts found.</div>';
+            return;
+        }
+        wrap.innerHTML = buildAccountsTable(accounts);
+    } catch (e) {
+        wrap.innerHTML = '<div class="empty-state">Could not load accounts.</div>';
+    }
+}
+
+async function loadAdminUsers() {
+    const wrap = document.getElementById('admin-users-table');
+    wrap.innerHTML = '<div class="empty-state">Loading...</div>';
+    try {
+        const res = await fetch(`${API}/accounts/admin/users`, { headers: authHeaders() });
+        const users = await res.json();
+        if (users.length === 0) {
+            wrap.innerHTML = '<div class="empty-state">No users found.</div>';
+            return;
+        }
+        wrap.innerHTML = `
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map((u, i) => `
+                        <tr>
+                            <td class="muted">${i + 1}</td>
+                            <td>${u}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } catch (e) {
+        wrap.innerHTML = '<div class="empty-state">Could not load users.</div>';
+    }
+}
+
+// builds the accounts table HTML — used in both overview and all-accounts
+function buildAccountsTable(accounts) {
+    return `
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Owner</th>
+                    <th>Holder Name</th>
+                    <th>Account No.</th>
+                    <th>Balance</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${accounts.map(acc => `
+                    <tr>
+                        <td class="muted">${acc.username}</td>
+                        <td>${acc.accountHolderName}</td>
+                        <td class="mono">${acc.accountNumber}</td>
+                        <td class="accent">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                        <td>
+                            <button class="btn-delete" onclick="adminDeleteAccount('${acc.accountNumber}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+async function adminDeleteAccount(accountNumber) {
+    if (!confirm(`Delete account ${accountNumber}? This cannot be undone.`)) return;
+    try {
+        const res = await fetch(`${API}/accounts/${accountNumber}`, {
+            method: 'DELETE',
+            headers: authHeaders()
+        });
+        if (res.ok) {
+            // refresh whichever table is currently visible
+            const allAccountsActive = document.getElementById('admin-accounts').classList.contains('active');
+            if (allAccountsActive) loadAdminAccounts();
+            else loadAdminPanel();
+        } else {
+            const err = await res.text();
+            alert('Could not delete: ' + err);
+        }
+    } catch (e) {
+        alert('Could not connect.');
     }
 }
