@@ -18,7 +18,12 @@ public class BankAccountService {
     @Autowired UserRepository userRepository;
 
     public BankAccount createAccount(BankAccount account, String username) {
-        // global uniqueness — no two accounts can share an account number
+        // enforce ACC format
+        if (!account.getAccountNumber().toUpperCase().startsWith("ACC")) {
+            throw new RuntimeException("Account number must start with 'ACC' (e.g. ACC001)");
+        }
+
+        // global uniqueness check
         if (bankAccountRepository.findByAccountNumber(account.getAccountNumber()).isPresent()) {
             throw new RuntimeException("Account number " + account.getAccountNumber() + " already exists!");
         }
