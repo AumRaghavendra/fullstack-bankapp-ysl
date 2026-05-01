@@ -73,9 +73,14 @@ async function register() {
     } catch (e) { showMsg('register-msg', '✗ Could not connect.', 'error'); }
 }
 
+// pt1 change 1 — login() with overlay show/hide
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
+
+    // show overlay
+    document.getElementById('login-overlay').style.display = 'flex';
+
     try {
         const res = await fetch(`${API}/auth/login`, {
             method: 'POST',
@@ -90,17 +95,19 @@ async function login() {
             localStorage.setItem('username', loggedInUsername);
             showApp();
         } else {
+            document.getElementById('login-overlay').style.display = 'none';
             showMsg('login-msg', '✗ ' + await res.text(), 'error');
         }
-    } catch (e) { showMsg('login-msg', '✗ Could not connect.', 'error'); }
+    } catch (e) {
+        document.getElementById('login-overlay').style.display = 'none';
+        showMsg('login-msg', '✗ Could not connect.', 'error');
+    }
 }
 
+// pt1 change 4 + pt2 change 1 — logout() hides overlay, now delegates to modal
 function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    localStorage.removeItem('username');
-    token = null; userRole = null; loggedInUsername = null; userAccounts = [];
-    showAuth();
+    document.getElementById('login-overlay').style.display = 'none';
+    openLogoutModal();
 }
 
 function authHeaders() {
@@ -171,12 +178,14 @@ async function loadAccounts() {
             grid.innerHTML = '<div class="empty-state">No accounts yet. Create one!</div>';
             return;
         }
+        // pt1 change 2 — added Delete button on each account card
         grid.innerHTML = userAccounts.map(acc => `
             <div class="account-card">
                 <div class="acc-name">${acc.accountHolderName}</div>
                 <div class="acc-number">${acc.accountNumber}</div>
                 <div class="acc-balance">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
                 <div class="acc-balance-label">Available Balance</div>
+                <button class="btn-delete-card" onclick="openDeleteModal('${acc.accountNumber}')">Delete Account</button>
             </div>
         `).join('');
     } catch (e) {
@@ -283,6 +292,57 @@ async function loadHistory() {
             </div>
         `).join('');
     } catch (e) { list.innerHTML = '<div class="empty-state">Could not load history.</div>'; }
+}
+
+// ===== DELETE ACCOUNT MODAL (pt1 change 3) =====
+
+function openDeleteModal(accountNumber) {
+    document.getElementById('modal-acc-num').textContent = accountNumber;
+    document.getElementById('modal-confirm-btn').onclick = () => confirmDeleteAccount(accountNumber);
+    document.getElementById('delete-modal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').style.display = 'none';
+}
+
+async function confirmDeleteAccount(accountNumber) {
+    closeDeleteModal();
+    try {
+        const res = await fetch(`${API}/accounts/${accountNumber}`, {
+            method: 'DELETE', headers: authHeaders()
+        });
+        if (res.ok) {
+            await loadAccounts();
+            populateDropdowns();
+        } else {
+            alert('Could not delete: ' + await res.text());
+        }
+    } catch (e) { alert('Could not connect.'); }
+}
+
+// ===== LOGOUT MODAL (pt2 changes 2) =====
+
+function openLogoutModal() {
+    document.getElementById('logout-modal').style.display = 'flex';
+}
+
+function closeLogoutModal() {
+    document.getElementById('logout-modal').style.display = 'none';
+}
+
+function confirmLogout() {
+    closeLogoutModal();
+    // show logging out overlay briefly before clearing
+    document.getElementById('logout-overlay').style.display = 'flex';
+    setTimeout(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('username');
+        token = null; userRole = null; loggedInUsername = null; userAccounts = [];
+        document.getElementById('logout-overlay').style.display = 'none';
+        showAuth();
+    }, 1200);
 }
 
 // ===== ADMIN FUNCTIONS =====

@@ -9,6 +9,49 @@
 </head>
 <body>
 
+    <!-- Login overlay -->
+    <div id="login-overlay" style="display:none;">
+        <div class="login-overlay-box">
+            <div class="spinner"></div>
+            <p class="overlay-text">Logging in...</p>
+        </div>
+    </div>
+
+    <!-- Delete account confirm modal -->
+    <div id="delete-modal" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-icon">🗑️</div>
+            <h2 class="modal-title">Delete Account</h2>
+            <p class="modal-msg" id="modal-msg">Are you sure you want to delete <strong id="modal-acc-num"></strong>?</p>
+            <p class="modal-warning">This will also delete all transaction history for this account.</p>
+            <div class="modal-actions">
+                <button class="btn-cancel-sm modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-delete modal-confirm" id="modal-confirm-btn">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout confirm modal -->
+    <div id="logout-modal" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-icon">👋</div>
+            <h2 class="modal-title">Log Out?</h2>
+            <p class="modal-msg">Are you sure you want to log out of Y$L Bank?</p>
+            <div class="modal-actions">
+                <button class="btn-cancel-sm modal-cancel" onclick="closeLogoutModal()">Stay</button>
+                <button class="btn-logout-confirm modal-confirm" onclick="confirmLogout()">Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logging out overlay -->
+    <div id="logout-overlay" style="display:none;">
+        <div class="login-overlay-box">
+            <div class="spinner logout-spinner"></div>
+            <p class="overlay-text">Logging out...</p>
+        </div>
+    </div>
+
     <!-- AUTH PAGE -->
     <div id="auth-page">
         <div class="auth-container">
@@ -99,7 +142,7 @@
                 <button class="nav-btn" onclick="showAdminSection('admin-accounts')">All Accounts</button>
                 <button class="nav-btn" onclick="showAdminSection('admin-users-section')">All Users</button>
             </nav>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <button class="logout-btn" onclick="openLogoutModal()">Logout</button>
         </div>
 
         <div class="main">
