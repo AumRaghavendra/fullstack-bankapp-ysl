@@ -1,31 +1,24 @@
 package com.bank.bankapp.controller;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
 import com.bank.bankapp.model.BankAccount;
 import com.bank.bankapp.model.Transaction;
-import com.bank.bankapp.repository.UserRepository;
 import com.bank.bankapp.service.BankAccountService;
-
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/accounts")
 public class BankAccountController {
 
-    @Autowired
-    BankAccountService bankAccountService;
+    @Autowired BankAccountService bankAccountService;
+    @Autowired PasswordEncoder passwordEncoder;
 
-    @Autowired
-    UserRepository userRepository;
-
-    // helper — get role of the currently logged in user from the database
     private String getRole(Authentication auth) {
         return auth.getAuthorities().stream()
             .findFirst()
@@ -34,10 +27,13 @@ public class BankAccountController {
     }
 
     @PostMapping
-    public ResponseEntity<BankAccount> createAccount(@Valid @RequestBody BankAccount account,
-                                                     Authentication auth) {
-        BankAccount created = bankAccountService.createAccount(account, auth.getName());
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<?> createAccount(@Valid @RequestBody BankAccount account, Authentication auth) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(bankAccountService.createAccount(account, auth.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping
@@ -46,62 +42,90 @@ public class BankAccountController {
     }
 
     @GetMapping("/{accountNumber}")
-    public ResponseEntity<BankAccount> getAccount(@PathVariable String accountNumber,
-                                                  Authentication auth) {
-        bankAccountService.verifyOwnership(accountNumber, auth.getName(), getRole(auth));
-        return ResponseEntity.ok(bankAccountService.getAccount(accountNumber));
+    public ResponseEntity<?> getAccount(@PathVariable String accountNumber, Authentication auth) {
+        try {
+            bankAccountService.verifyOwnership(accountNumber, auth.getName(), getRole(auth));
+            return ResponseEntity.ok(bankAccountService.getAccount(accountNumber));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{accountNumber}/transactions")
-    public ResponseEntity<List<Transaction>> getTransactionHistory(@PathVariable String accountNumber,
-                                                                   Authentication auth) {
-        return ResponseEntity.ok(
-            bankAccountService.getTransactionHistory(accountNumber, auth.getName(), getRole(auth))
-        );
+    public ResponseEntity<?> getTransactionHistory(@PathVariable String accountNumber, Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.getTransactionHistory(accountNumber, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{accountNumber}/deposit")
-    public ResponseEntity<BankAccount> deposit(@PathVariable String accountNumber,
-                                               @RequestParam double amount,
-                                               Authentication auth) {
-        return ResponseEntity.ok(
-            bankAccountService.deposit(accountNumber, amount, auth.getName(), getRole(auth))
-        );
+    public ResponseEntity<?> deposit(@PathVariable String accountNumber,
+                                     @RequestParam double amount, Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.deposit(accountNumber, amount, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{accountNumber}/withdraw")
-    public ResponseEntity<BankAccount> withdraw(@PathVariable String accountNumber,
-                                                @RequestParam double amount,
-                                                Authentication auth) {
-        return ResponseEntity.ok(
-            bankAccountService.withdraw(accountNumber, amount, auth.getName(), getRole(auth))
-        );
+    public ResponseEntity<?> withdraw(@PathVariable String accountNumber,
+                                      @RequestParam double amount, Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.withdraw(accountNumber, amount, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@RequestParam String fromAccount,
-                                           @RequestParam String toAccount,
-                                           @RequestParam double amount,
-                                           Authentication auth) {
-        return ResponseEntity.ok(
-            bankAccountService.transfer(fromAccount, toAccount, amount, auth.getName(), getRole(auth))
-        );
+    public ResponseEntity<?> transfer(@RequestParam String fromAccount,
+                                      @RequestParam String toAccount,
+                                      @RequestParam double amount, Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.transfer(fromAccount, toAccount, amount, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{accountNumber}")
-    public ResponseEntity<String> deleteAccount(@PathVariable String accountNumber,
-                                                Authentication auth) {
-        return ResponseEntity.ok(
-            bankAccountService.deleteAccount(accountNumber, auth.getName(), getRole(auth))
-        );
+    public ResponseEntity<?> deleteAccount(@PathVariable String accountNumber, Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.deleteAccount(accountNumber, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // admin only endpoint — returns all registered usernames
     @GetMapping("/admin/users")
     public ResponseEntity<?> getAllUsers(Authentication auth) {
-        if (!"ADMIN".equals(getRole(auth))) {
+        if (!"ADMIN".equals(getRole(auth)))
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
-        }
         return ResponseEntity.ok(bankAccountService.getAllUsernames());
+    }
+
+    @DeleteMapping("/admin/users/{username}")
+    public ResponseEntity<?> deleteUser(@PathVariable String username, Authentication auth) {
+        if (!"ADMIN".equals(getRole(auth)))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
+        if (username.equals(auth.getName()))
+            return ResponseEntity.badRequest().body("You cannot delete your own account!");
+        return ResponseEntity.ok(bankAccountService.deleteUser(username));
+    }
+
+    @PutMapping("/admin/users/{username}/password")
+    public ResponseEntity<?> changeUserPassword(@PathVariable String username,
+                                                @RequestParam String newPassword,
+                                                Authentication auth) {
+        if (!"ADMIN".equals(getRole(auth)))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
+        if (!newPassword.matches(".*[A-Z].*") ||
+            !newPassword.matches(".*[0-9].*") ||
+            !newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\\\",./<>?].*"))
+            return ResponseEntity.badRequest().body("Password must contain uppercase, number, and special character!");
+        return ResponseEntity.ok(bankAccountService.changeUserPassword(username, newPassword, passwordEncoder));
     }
 }

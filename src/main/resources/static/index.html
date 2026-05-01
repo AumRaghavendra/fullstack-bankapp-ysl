@@ -31,8 +31,6 @@
                 <button class="auth-tab active" onclick="switchTab('login')">Login</button>
                 <button class="auth-tab" onclick="switchTab('register')">Register</button>
             </div>
-
-            <!-- LOGIN -->
             <div id="login-form">
                 <div class="form-group">
                     <label>Username</label>
@@ -50,8 +48,6 @@
                 <button class="btn-primary full-width" onclick="login()">Login</button>
                 <div id="login-msg" class="msg"></div>
             </div>
-
-            <!-- REGISTER -->
             <div id="register-form" style="display:none">
                 <div class="form-group">
                     <label>Username</label>
@@ -72,7 +68,7 @@
         </div>
     </div>
 
-    <!-- MAIN APP — USER VIEW -->
+    <!-- MAIN APP -->
     <div id="app-page" style="display:none">
         <div class="sidebar">
             <div class="logo">
@@ -90,7 +86,6 @@
                   <text x="110" y="41" font-family="DM Sans, sans-serif" font-size="20" font-weight="300" fill="#aaaaaa" letter-spacing="1">BANK</text>
                 </svg>
             </div>
-            <!-- user nav — hidden for admin -->
             <nav id="user-nav">
                 <button class="nav-btn active" onclick="showSection('dashboard')">Dashboard</button>
                 <button class="nav-btn" onclick="showSection('create')">New Account</button>
@@ -99,18 +94,15 @@
                 <button class="nav-btn" onclick="showSection('transfer')">Transfer</button>
                 <button class="nav-btn" onclick="showSection('history')">History</button>
             </nav>
-            <!-- admin nav — hidden for user -->
             <nav id="admin-nav" style="display:none">
-                <button class="nav-btn admin-nav-btn active" onclick="showAdminSection('admin-panel')">🛡️ Overview</button>
-                <button class="nav-btn admin-nav-btn" onclick="showAdminSection('admin-accounts')">All Accounts</button>
-                <button class="nav-btn admin-nav-btn" onclick="showAdminSection('admin-users-section')">All Users</button>
+                <button class="nav-btn active" onclick="showAdminSection('admin-panel')">🛡️ Overview</button>
+                <button class="nav-btn" onclick="showAdminSection('admin-accounts')">All Accounts</button>
+                <button class="nav-btn" onclick="showAdminSection('admin-users-section')">All Users</button>
             </nav>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
 
         <div class="main">
-
-            <!-- ===== USER SECTIONS ===== -->
 
             <!-- Dashboard -->
             <section id="dashboard" class="section active">
@@ -124,7 +116,7 @@
                 <div id="accounts-grid" class="accounts-grid"></div>
             </section>
 
-            <!-- Create -->
+            <!-- New Account -->
             <section id="create" class="section">
                 <div class="page-header"><h1>New Account</h1></div>
                 <div class="card form-card">
@@ -138,84 +130,89 @@
                     </div>
                     <div class="form-group">
                         <label>Opening Balance (₹)</label>
-                        <input type="number" id="create-balance" placeholder="1000">
+                        <input type="number" id="create-balance" placeholder="1000" min="0">
                     </div>
                     <button class="btn-primary" onclick="createAccount()">Create Account</button>
                     <div id="create-msg" class="msg"></div>
                 </div>
             </section>
 
-            <!-- Deposit -->
+            <!-- Deposit — dropdown -->
             <section id="deposit" class="section">
                 <div class="page-header"><h1>Deposit</h1></div>
                 <div class="card form-card">
                     <div class="form-group">
-                        <label>Account Number</label>
-                        <input type="text" id="deposit-accnum" placeholder="ACC001">
+                        <label>Select Account</label>
+                        <select id="deposit-accnum" class="form-select">
+                            <option value="">Select account...</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Amount (₹)</label>
-                        <input type="number" id="deposit-amount" placeholder="500">
+                        <input type="number" id="deposit-amount" placeholder="500" min="1">
                     </div>
                     <button class="btn-primary" onclick="deposit()">Deposit</button>
                     <div id="deposit-msg" class="msg"></div>
                 </div>
             </section>
 
-            <!-- Withdraw -->
+            <!-- Withdraw — dropdown -->
             <section id="withdraw" class="section">
                 <div class="page-header"><h1>Withdraw</h1></div>
                 <div class="card form-card">
                     <div class="form-group">
-                        <label>Account Number</label>
-                        <input type="text" id="withdraw-accnum" placeholder="ACC001">
+                        <label>Select Account</label>
+                        <select id="withdraw-accnum" class="form-select">
+                            <option value="">Select account...</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Amount (₹)</label>
-                        <input type="number" id="withdraw-amount" placeholder="200">
+                        <input type="number" id="withdraw-amount" placeholder="200" min="1">
                     </div>
                     <button class="btn-primary" onclick="withdraw()">Withdraw</button>
                     <div id="withdraw-msg" class="msg"></div>
                 </div>
             </section>
 
-            <!-- Transfer -->
+            <!-- Transfer — from dropdown, to manual input -->
             <section id="transfer" class="section">
                 <div class="page-header"><h1>Transfer</h1></div>
                 <div class="card form-card">
                     <div class="form-group">
-                        <label>From Account</label>
-                        <input type="text" id="transfer-from" placeholder="ACC001">
+                        <label>From (Your Account)</label>
+                        <select id="transfer-from" class="form-select">
+                            <option value="">Select account...</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label>To Account</label>
+                        <label>To (Destination Account Number)</label>
                         <input type="text" id="transfer-to" placeholder="ACC002">
                     </div>
                     <div class="form-group">
                         <label>Amount (₹)</label>
-                        <input type="number" id="transfer-amount" placeholder="300">
+                        <input type="number" id="transfer-amount" placeholder="300" min="1">
                     </div>
                     <button class="btn-primary" onclick="transfer()">Transfer</button>
                     <div id="transfer-msg" class="msg"></div>
                 </div>
             </section>
 
-            <!-- History -->
+            <!-- History — dropdown, auto-loads on change -->
             <section id="history" class="section">
                 <div class="page-header"><h1>Transaction History</h1></div>
                 <div class="card form-card">
                     <div class="form-group">
-                        <label>Account Number</label>
-                        <input type="text" id="history-accnum" placeholder="ACC001">
+                        <label>Select Account</label>
+                        <select id="history-accnum" class="form-select" onchange="loadHistory()">
+                            <option value="">Select account...</option>
+                        </select>
                     </div>
-                    <button class="btn-primary" onclick="loadHistory()">View History</button>
                 </div>
                 <div id="history-list" class="history-list"></div>
             </section>
 
-            <!-- ===== ADMIN SECTIONS ===== -->
-
-            <!-- Admin Overview Panel -->
+            <!-- Admin Overview -->
             <section id="admin-panel" class="section">
                 <div class="admin-page-header">
                     <div>
@@ -224,8 +221,6 @@
                     </div>
                     <button class="btn-admin" onclick="loadAdminPanel()">Refresh</button>
                 </div>
-
-                <!-- Stats row -->
                 <div class="admin-stats-grid">
                     <div class="stat-card">
                         <div class="stat-label">Total Users</div>
@@ -240,15 +235,13 @@
                         <div class="stat-value" id="stat-balance">—</div>
                     </div>
                 </div>
-
-                <!-- Recent accounts preview -->
                 <div class="admin-section-title">Recent Accounts</div>
                 <div id="admin-recent-accounts" class="admin-table-wrap">
                     <div class="empty-state">Loading...</div>
                 </div>
             </section>
 
-            <!-- Admin — All Accounts -->
+            <!-- Admin All Accounts -->
             <section id="admin-accounts" class="section">
                 <div class="admin-page-header">
                     <div>
@@ -262,7 +255,7 @@
                 </div>
             </section>
 
-            <!-- Admin — All Users -->
+            <!-- Admin All Users -->
             <section id="admin-users-section" class="section">
                 <div class="admin-page-header">
                     <div>

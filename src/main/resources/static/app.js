@@ -1,6 +1,5 @@
 const API = 'https://fullstack-bankapp-ysl.onrender.com';
 
-// toggle password visibility
 function togglePassword(inputId, btn) {
     const input = document.getElementById(inputId);
     const isPassword = input.type === 'password';
@@ -13,8 +12,8 @@ function togglePassword(inputId, btn) {
 let token = localStorage.getItem('token');
 let userRole = localStorage.getItem('role');
 let loggedInUsername = localStorage.getItem('username');
+let userAccounts = [];
 
-// check if already logged in on page load
 window.onload = () => {
     if (token) showApp();
     else showAuth();
@@ -25,23 +24,18 @@ function showApp() {
     document.getElementById('app-page').style.display = 'flex';
 
     if (userRole === 'ADMIN') {
-        // show admin nav, hide user nav
         document.getElementById('user-nav').style.display = 'none';
         document.getElementById('admin-nav').style.display = 'flex';
-        // hide all user sections, show admin panel
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById('admin-panel').classList.add('active');
-        // set admin welcome name
-        const adminWelcome = document.getElementById('admin-welcome-username');
-        if (adminWelcome) adminWelcome.textContent = loggedInUsername || 'Admin';
+        const el = document.getElementById('admin-welcome-username');
+        if (el) el.textContent = loggedInUsername || 'Admin';
         loadAdminPanel();
     } else {
-        // show user nav, hide admin nav
         document.getElementById('user-nav').style.display = 'flex';
         document.getElementById('admin-nav').style.display = 'none';
-        // set welcome name
-        const welcomeEl = document.getElementById('welcome-username');
-        if (welcomeEl) welcomeEl.textContent = loggedInUsername || 'there';
+        const el = document.getElementById('welcome-username');
+        if (el) el.textContent = loggedInUsername || 'there';
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById('dashboard').classList.add('active');
         loadAccounts();
@@ -53,7 +47,6 @@ function showAuth() {
     document.getElementById('app-page').style.display = 'none';
 }
 
-// auth tab switch
 function switchTab(tab) {
     document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
@@ -61,28 +54,13 @@ function switchTab(tab) {
     document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
 }
 
-// register
 async function register() {
     const username = document.getElementById('reg-username').value;
     const password = document.getElementById('reg-password').value;
-
-    if (!username || username.trim() === '') {
-        showMsg('register-msg', '✗ Username cannot be empty.', 'error');
-        return;
-    }
-    if (!/[A-Z]/.test(password)) {
-        showMsg('register-msg', '✗ Password must contain at least one uppercase letter.', 'error');
-        return;
-    }
-    if (!/[0-9]/.test(password)) {
-        showMsg('register-msg', '✗ Password must contain at least one number.', 'error');
-        return;
-    }
-    if (!/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]/.test(password)) {
-        showMsg('register-msg', '✗ Password must contain at least one special character.', 'error');
-        return;
-    }
-
+    if (!username || username.trim() === '') { showMsg('register-msg', '✗ Username cannot be empty.', 'error'); return; }
+    if (!/[A-Z]/.test(password)) { showMsg('register-msg', '✗ Password must contain at least one uppercase letter.', 'error'); return; }
+    if (!/[0-9]/.test(password)) { showMsg('register-msg', '✗ Password must contain at least one number.', 'error'); return; }
+    if (!/[!@#$%^&*()_+\-=\[\]{}|;:\'",.<>\/?]/.test(password)) { showMsg('register-msg', '✗ Password must contain at least one special character.', 'error'); return; }
     try {
         const res = await fetch(`${API}/auth/register`, {
             method: 'POST',
@@ -90,17 +68,11 @@ async function register() {
             body: JSON.stringify({ username, password })
         });
         const msg = await res.text();
-        if (res.ok) {
-            showMsg('register-msg', '✓ Registered! Please login.', 'success');
-        } else {
-            showMsg('register-msg', '✗ ' + msg, 'error');
-        }
-    } catch (e) {
-        showMsg('register-msg', '✗ Could not connect.', 'error');
-    }
+        res.ok ? showMsg('register-msg', '✓ Registered! Please login.', 'success')
+                : showMsg('register-msg', '✗ ' + msg, 'error');
+    } catch (e) { showMsg('register-msg', '✗ Could not connect.', 'error'); }
 }
 
-// login
 async function login() {
     const username = document.getElementById('login-username').value;
     const password = document.getElementById('login-password').value;
@@ -112,51 +84,40 @@ async function login() {
         });
         if (res.ok) {
             const data = await res.json();
-            token = data.token;
-            userRole = data.role;
-            loggedInUsername = username;
+            token = data.token; userRole = data.role; loggedInUsername = username;
             localStorage.setItem('token', token);
             localStorage.setItem('role', userRole);
             localStorage.setItem('username', loggedInUsername);
             showApp();
         } else {
-            const err = await res.text();
-            showMsg('login-msg', '✗ ' + err, 'error');
+            showMsg('login-msg', '✗ ' + await res.text(), 'error');
         }
-    } catch (e) {
-        showMsg('login-msg', '✗ Could not connect.', 'error');
-    }
+    } catch (e) { showMsg('login-msg', '✗ Could not connect.', 'error'); }
 }
 
-// logout
 function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
     localStorage.removeItem('username');
-    token = null;
-    userRole = null;
-    loggedInUsername = null;
+    token = null; userRole = null; loggedInUsername = null; userAccounts = [];
     showAuth();
 }
 
-// auth headers helper
 function authHeaders() {
-    return {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-    };
+    return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 }
 
-// USER navigation
+// ===== NAVIGATION =====
+
 function showSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('#user-nav .nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     event.target.classList.add('active');
     if (id === 'dashboard') loadAccounts();
+    if (['deposit', 'withdraw', 'transfer', 'history'].includes(id)) populateDropdowns();
 }
 
-// ADMIN navigation
 function showAdminSection(id) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('#admin-nav .nav-btn').forEach(b => b.classList.remove('active'));
@@ -167,11 +128,34 @@ function showAdminSection(id) {
     if (id === 'admin-users-section') loadAdminUsers();
 }
 
-// show messages
 function showMsg(id, text, type) {
     const el = document.getElementById(id);
     el.textContent = text;
     el.className = 'msg ' + type;
+}
+
+// ===== DROPDOWN =====
+
+async function populateDropdowns() {
+    try {
+        const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
+        if (!res.ok) return;
+        userAccounts = await res.json();
+        ['deposit-accnum', 'withdraw-accnum', 'transfer-from', 'history-accnum'].forEach(id => {
+            renderDropdown(id, userAccounts);
+        });
+    } catch (e) { console.error('Dropdown load failed', e); }
+}
+
+function renderDropdown(selectId, accounts) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = accounts.length === 0
+        ? `<option value="">— No accounts yet —</option>`
+        : `<option value="">Select account...</option>` +
+          accounts.map(a =>
+            `<option value="${a.accountNumber}">${a.accountNumber} — ${a.accountHolderName} (₹${a.balance.toLocaleString('en-IN')})</option>`
+          ).join('');
 }
 
 // ===== USER FUNCTIONS =====
@@ -182,12 +166,12 @@ async function loadAccounts() {
     try {
         const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
         if (res.status === 401 || res.status === 403) { logout(); return; }
-        const accounts = await res.json();
-        if (accounts.length === 0) {
+        userAccounts = await res.json();
+        if (userAccounts.length === 0) {
             grid.innerHTML = '<div class="empty-state">No accounts yet. Create one!</div>';
             return;
         }
-        grid.innerHTML = accounts.map(acc => `
+        grid.innerHTML = userAccounts.map(acc => `
             <div class="account-card">
                 <div class="acc-name">${acc.accountHolderName}</div>
                 <div class="acc-number">${acc.accountNumber}</div>
@@ -202,12 +186,12 @@ async function loadAccounts() {
 
 async function createAccount() {
     const name = document.getElementById('create-name').value;
-    const accNum = document.getElementById('create-accnum').value;
+    const accNum = document.getElementById('create-accnum').value.trim();
     const balance = document.getElementById('create-balance').value;
+    if (!accNum) { showMsg('create-msg', '✗ Account number cannot be empty.', 'error'); return; }
     try {
         const res = await fetch(`${API}/accounts`, {
-            method: 'POST',
-            headers: authHeaders(),
+            method: 'POST', headers: authHeaders(),
             body: JSON.stringify({ accountHolderName: name, accountNumber: accNum, balance: parseFloat(balance) })
         });
         if (res.ok) {
@@ -215,134 +199,111 @@ async function createAccount() {
             document.getElementById('create-name').value = '';
             document.getElementById('create-accnum').value = '';
             document.getElementById('create-balance').value = '';
+            await loadAccounts();
         } else {
-            const err = await res.text();
-            showMsg('create-msg', '✗ ' + err, 'error');
+            showMsg('create-msg', '✗ ' + await res.text(), 'error');
         }
-    } catch (e) {
-        showMsg('create-msg', '✗ Could not connect.', 'error');
-    }
+    } catch (e) { showMsg('create-msg', '✗ Could not connect.', 'error'); }
 }
 
 async function deposit() {
     const accNum = document.getElementById('deposit-accnum').value;
     const amount = document.getElementById('deposit-amount').value;
+    if (!accNum) { showMsg('deposit-msg', '✗ Please select an account.', 'error'); return; }
+    if (!amount || amount <= 0) { showMsg('deposit-msg', '✗ Enter a valid amount.', 'error'); return; }
     try {
         const res = await fetch(`${API}/accounts/${accNum}/deposit?amount=${amount}`, {
-            method: 'PUT',
-            headers: authHeaders()
+            method: 'PUT', headers: authHeaders()
         });
         if (res.ok) {
             const acc = await res.json();
-            showMsg('deposit-msg', `✓ Deposited ₹${amount}. New balance: ₹${acc.balance}`, 'success');
-        } else {
-            const err = await res.text();
-            showMsg('deposit-msg', '✗ ' + err, 'error');
-        }
-    } catch (e) {
-        showMsg('deposit-msg', '✗ Could not connect.', 'error');
-    }
+            showMsg('deposit-msg', `✓ Deposited ₹${amount}. New balance: ₹${acc.balance.toLocaleString('en-IN')}`, 'success');
+            document.getElementById('deposit-amount').value = '';
+            await loadAccounts(); populateDropdowns();
+        } else { showMsg('deposit-msg', '✗ ' + await res.text(), 'error'); }
+    } catch (e) { showMsg('deposit-msg', '✗ Could not connect.', 'error'); }
 }
 
 async function withdraw() {
     const accNum = document.getElementById('withdraw-accnum').value;
     const amount = document.getElementById('withdraw-amount').value;
+    if (!accNum) { showMsg('withdraw-msg', '✗ Please select an account.', 'error'); return; }
+    if (!amount || amount <= 0) { showMsg('withdraw-msg', '✗ Enter a valid amount.', 'error'); return; }
     try {
         const res = await fetch(`${API}/accounts/${accNum}/withdraw?amount=${amount}`, {
-            method: 'PUT',
-            headers: authHeaders()
+            method: 'PUT', headers: authHeaders()
         });
         if (res.ok) {
             const acc = await res.json();
-            showMsg('withdraw-msg', `✓ Withdrawn ₹${amount}. New balance: ₹${acc.balance}`, 'success');
-        } else {
-            const err = await res.text();
-            showMsg('withdraw-msg', '✗ ' + err, 'error');
-        }
-    } catch (e) {
-        showMsg('withdraw-msg', '✗ Could not connect.', 'error');
-    }
+            showMsg('withdraw-msg', `✓ Withdrawn ₹${amount}. New balance: ₹${acc.balance.toLocaleString('en-IN')}`, 'success');
+            document.getElementById('withdraw-amount').value = '';
+            await loadAccounts(); populateDropdowns();
+        } else { showMsg('withdraw-msg', '✗ ' + await res.text(), 'error'); }
+    } catch (e) { showMsg('withdraw-msg', '✗ Could not connect.', 'error'); }
 }
 
 async function transfer() {
     const from = document.getElementById('transfer-from').value;
-    const to = document.getElementById('transfer-to').value;
+    const to = document.getElementById('transfer-to').value.trim();
     const amount = document.getElementById('transfer-amount').value;
+    if (!from) { showMsg('transfer-msg', '✗ Please select your account.', 'error'); return; }
+    if (!to) { showMsg('transfer-msg', '✗ Enter destination account number.', 'error'); return; }
+    if (from === to) { showMsg('transfer-msg', '✗ Cannot transfer to the same account.', 'error'); return; }
+    if (!amount || amount <= 0) { showMsg('transfer-msg', '✗ Enter a valid amount.', 'error'); return; }
     try {
         const res = await fetch(`${API}/accounts/transfer?fromAccount=${from}&toAccount=${to}&amount=${amount}`, {
-            method: 'POST',
-            headers: authHeaders()
+            method: 'POST', headers: authHeaders()
         });
         if (res.ok) {
-            const msg = await res.text();
-            showMsg('transfer-msg', '✓ ' + msg, 'success');
-        } else {
-            const err = await res.text();
-            showMsg('transfer-msg', '✗ ' + err, 'error');
-        }
-    } catch (e) {
-        showMsg('transfer-msg', '✗ Could not connect.', 'error');
-    }
+            showMsg('transfer-msg', '✓ ' + await res.text(), 'success');
+            document.getElementById('transfer-to').value = '';
+            document.getElementById('transfer-amount').value = '';
+            await loadAccounts(); populateDropdowns();
+        } else { showMsg('transfer-msg', '✗ ' + await res.text(), 'error'); }
+    } catch (e) { showMsg('transfer-msg', '✗ Could not connect.', 'error'); }
 }
 
 async function loadHistory() {
     const accNum = document.getElementById('history-accnum').value;
+    if (!accNum) return;
     const list = document.getElementById('history-list');
     list.innerHTML = '<div class="empty-state">Loading...</div>';
     try {
         const res = await fetch(`${API}/accounts/${accNum}/transactions`, { headers: authHeaders() });
         const txns = await res.json();
-        if (txns.length === 0) {
-            list.innerHTML = '<div class="empty-state">No transactions found.</div>';
-            return;
-        }
+        if (txns.length === 0) { list.innerHTML = '<div class="empty-state">No transactions found.</div>'; return; }
         list.innerHTML = txns.reverse().map(tx => `
             <div class="history-item">
-                <span class="tx-type ${tx.type}">${tx.type}</span>
+                <span class="tx-type ${tx.type.replace(' ', '-')}">${tx.type}</span>
                 <div>
                     <div class="tx-amount">₹${tx.amount.toLocaleString('en-IN')}</div>
-                    <div class="tx-balance">Balance after: ₹${tx.balanceAfter}</div>
+                    <div class="tx-balance">Balance after: ₹${tx.balanceAfter.toLocaleString('en-IN')}</div>
                 </div>
                 <span class="tx-time">${new Date(tx.timestamp).toLocaleString('en-IN')}</span>
             </div>
         `).join('');
-    } catch (e) {
-        list.innerHTML = '<div class="empty-state">Could not load history.</div>';
-    }
+    } catch (e) { list.innerHTML = '<div class="empty-state">Could not load history.</div>'; }
 }
 
 // ===== ADMIN FUNCTIONS =====
 
 async function loadAdminPanel() {
-    // load stats and recent accounts in parallel
     try {
         const [accountsRes, usersRes] = await Promise.all([
             fetch(`${API}/accounts`, { headers: authHeaders() }),
             fetch(`${API}/accounts/admin/users`, { headers: authHeaders() })
         ]);
-
         const accounts = await accountsRes.json();
         const users = await usersRes.json();
-
         const totalBalance = accounts.reduce((sum, a) => sum + a.balance, 0);
-
         document.getElementById('stat-users').textContent = users.length;
         document.getElementById('stat-accounts').textContent = accounts.length;
-        document.getElementById('stat-balance').textContent =
-            '₹' + totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-
-        // show last 5 accounts as preview
+        document.getElementById('stat-balance').textContent = '₹' + totalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 });
         const recent = accounts.slice(-5).reverse();
         const wrap = document.getElementById('admin-recent-accounts');
-        if (recent.length === 0) {
-            wrap.innerHTML = '<div class="empty-state">No accounts yet.</div>';
-            return;
-        }
-        wrap.innerHTML = buildAccountsTable(recent);
-
+        wrap.innerHTML = recent.length === 0 ? '<div class="empty-state">No accounts yet.</div>' : buildAccountsTable(recent);
     } catch (e) {
-        document.getElementById('admin-recent-accounts').innerHTML =
-            '<div class="empty-state">Could not load data.</div>';
+        document.getElementById('admin-recent-accounts').innerHTML = '<div class="empty-state">Could not load data.</div>';
     }
 }
 
@@ -352,14 +313,8 @@ async function loadAdminAccounts() {
     try {
         const res = await fetch(`${API}/accounts`, { headers: authHeaders() });
         const accounts = await res.json();
-        if (accounts.length === 0) {
-            wrap.innerHTML = '<div class="empty-state">No accounts found.</div>';
-            return;
-        }
-        wrap.innerHTML = buildAccountsTable(accounts);
-    } catch (e) {
-        wrap.innerHTML = '<div class="empty-state">Could not load accounts.</div>';
-    }
+        wrap.innerHTML = accounts.length === 0 ? '<div class="empty-state">No accounts found.</div>' : buildAccountsTable(accounts);
+    } catch (e) { wrap.innerHTML = '<div class="empty-state">Could not load accounts.</div>'; }
 }
 
 async function loadAdminUsers() {
@@ -368,45 +323,77 @@ async function loadAdminUsers() {
     try {
         const res = await fetch(`${API}/accounts/admin/users`, { headers: authHeaders() });
         const users = await res.json();
-        if (users.length === 0) {
-            wrap.innerHTML = '<div class="empty-state">No users found.</div>';
-            return;
-        }
+        if (users.length === 0) { wrap.innerHTML = '<div class="empty-state">No users found.</div>'; return; }
         wrap.innerHTML = `
             <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Username</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>#</th><th>Username</th><th>Actions</th></tr></thead>
                 <tbody>
                     ${users.map((u, i) => `
-                        <tr>
+                        <tr id="user-row-${u}">
                             <td class="muted">${i + 1}</td>
                             <td>${u}</td>
+                            <td class="user-actions">
+                                <button class="btn-change-pw" onclick="showChangePassword('${u}')">Change Password</button>
+                                <button class="btn-delete" onclick="adminDeleteUser('${u}')"
+                                    ${u === loggedInUsername ? 'disabled title="Cannot delete yourself"' : ''}>Delete</button>
+                            </td>
+                        </tr>
+                        <tr id="pw-row-${u}" style="display:none;">
+                            <td colspan="3">
+                                <div class="pw-change-form">
+                                    <input type="password" id="pw-input-${u}" placeholder="New password" class="pw-inline-input">
+                                    <button class="btn-admin-sm" onclick="submitChangePassword('${u}')">Save</button>
+                                    <button class="btn-cancel-sm" onclick="hideChangePassword('${u}')">Cancel</button>
+                                    <span id="pw-msg-${u}" class="pw-msg"></span>
+                                </div>
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
-            </table>
-        `;
-    } catch (e) {
-        wrap.innerHTML = '<div class="empty-state">Could not load users.</div>';
-    }
+            </table>`;
+    } catch (e) { wrap.innerHTML = '<div class="empty-state">Could not load users.</div>'; }
 }
 
-// builds the accounts table HTML — used in both overview and all-accounts
+function showChangePassword(username) {
+    document.getElementById(`pw-row-${username}`).style.display = 'table-row';
+}
+
+function hideChangePassword(username) {
+    document.getElementById(`pw-row-${username}`).style.display = 'none';
+    document.getElementById(`pw-input-${username}`).value = '';
+    document.getElementById(`pw-msg-${username}`).textContent = '';
+}
+
+async function submitChangePassword(username) {
+    const newPassword = document.getElementById(`pw-input-${username}`).value;
+    const msgEl = document.getElementById(`pw-msg-${username}`);
+    if (!newPassword) { msgEl.textContent = '✗ Enter a password.'; msgEl.className = 'pw-msg error'; return; }
+    try {
+        const res = await fetch(`${API}/accounts/admin/users/${username}/password?newPassword=${encodeURIComponent(newPassword)}`, {
+            method: 'PUT', headers: authHeaders()
+        });
+        const msg = await res.text();
+        msgEl.textContent = res.ok ? '✓ ' + msg : '✗ ' + msg;
+        msgEl.className = 'pw-msg ' + (res.ok ? 'success' : 'error');
+    } catch (e) { msgEl.textContent = '✗ Could not connect.'; msgEl.className = 'pw-msg error'; }
+}
+
+async function adminDeleteUser(username) {
+    if (!confirm(`Delete user "${username}" and ALL their accounts and transactions? This cannot be undone.`)) return;
+    try {
+        const res = await fetch(`${API}/accounts/admin/users/${username}`, {
+            method: 'DELETE', headers: authHeaders()
+        });
+        if (res.ok) { loadAdminUsers(); loadAdminPanel(); }
+        else alert('Could not delete: ' + await res.text());
+    } catch (e) { alert('Could not connect.'); }
+}
+
 function buildAccountsTable(accounts) {
     return `
         <table class="admin-table">
             <thead>
-                <tr>
-                    <th>Owner</th>
-                    <th>Holder Name</th>
-                    <th>Account No.</th>
-                    <th>Balance</th>
-                    <th>Action</th>
-                </tr>
+                <tr><th>Owner</th><th>Holder Name</th><th>Account No.</th><th>Balance</th><th>Action</th></tr>
             </thead>
             <tbody>
                 ${accounts.map(acc => `
@@ -415,33 +402,21 @@ function buildAccountsTable(accounts) {
                         <td>${acc.accountHolderName}</td>
                         <td class="mono">${acc.accountNumber}</td>
                         <td class="accent">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
-                        <td>
-                            <button class="btn-delete" onclick="adminDeleteAccount('${acc.accountNumber}')">Delete</button>
-                        </td>
+                        <td><button class="btn-delete" onclick="adminDeleteAccount('${acc.accountNumber}')">Delete</button></td>
                     </tr>
                 `).join('')}
             </tbody>
-        </table>
-    `;
+        </table>`;
 }
 
 async function adminDeleteAccount(accountNumber) {
     if (!confirm(`Delete account ${accountNumber}? This cannot be undone.`)) return;
     try {
         const res = await fetch(`${API}/accounts/${accountNumber}`, {
-            method: 'DELETE',
-            headers: authHeaders()
+            method: 'DELETE', headers: authHeaders()
         });
         if (res.ok) {
-            // refresh whichever table is currently visible
-            const allAccountsActive = document.getElementById('admin-accounts').classList.contains('active');
-            if (allAccountsActive) loadAdminAccounts();
-            else loadAdminPanel();
-        } else {
-            const err = await res.text();
-            alert('Could not delete: ' + err);
-        }
-    } catch (e) {
-        alert('Could not connect.');
-    }
+            document.getElementById('admin-accounts').classList.contains('active') ? loadAdminAccounts() : loadAdminPanel();
+        } else { alert('Could not delete: ' + await res.text()); }
+    } catch (e) { alert('Could not connect.'); }
 }
