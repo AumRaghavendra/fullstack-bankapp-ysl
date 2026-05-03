@@ -20,6 +20,7 @@ window.onload = () => {
 }
 
 function showApp() {
+	document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display = 'flex';
 
