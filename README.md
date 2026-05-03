@@ -2,7 +2,7 @@
 
 A full-stack banking application built with Spring Boot, PostgreSQL, and Vanilla JS — featuring JWT authentication, role-based access control, and a responsive dark-themed UI.
 
-## 🌐 Live Demo
+## Live Demo
 **[https://fullstack-bankapp-ysl.onrender.com](https://fullstack-bankapp-ysl.onrender.com)**
 
 > The app is hosted on Render's free tier — it may take 30–60 seconds to wake up on first load.
