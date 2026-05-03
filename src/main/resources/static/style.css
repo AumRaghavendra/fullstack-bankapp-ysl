@@ -1011,3 +1011,21 @@ input:-webkit-autofill:active {
 
 .edit-name-msg.error { color: var(--danger); }
 .edit-name-msg.success { color: var(--success); }
+
+/* ===== PASSWORD INPUT WRAPPER (admin change password) ===== */
+
+.pw-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.pw-input-wrapper .pw-inline-input {
+    width: 220px;
+    padding-right: 2.5rem;
+}
+
+.pw-eye-btn {
+    position: absolute;
+    right: 0.6rem;
+}

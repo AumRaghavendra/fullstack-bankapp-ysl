@@ -9,9 +9,10 @@ function togglePassword(inputId, btn) {
         : `<svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
 }
 
-let token = localStorage.getItem('token');
-let userRole = localStorage.getItem('role');
-let loggedInUsername = localStorage.getItem('username');
+let token = sessionStorage.getItem('token');
+let userRole = sessionStorage.getItem('role');
+let loggedInUsername = sessionStorage.getItem('username');
+let isSuperAdmin = sessionStorage.getItem('isSuperAdmin') === 'true';
 let userAccounts = [];
 
 window.onload = () => {
@@ -20,10 +21,11 @@ window.onload = () => {
 }
 
 function showApp() {
+    document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display = 'flex';
 
-    if (userRole === 'ADMIN') {
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') {
         document.getElementById('user-nav').style.display = 'none';
         document.getElementById('admin-nav').style.display = 'flex';
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -43,6 +45,11 @@ function showApp() {
 }
 
 function showAuth() {
+    // clear login fields so previous credentials don't show after logout
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-msg').textContent = '';
+    document.getElementById('login-msg').className = 'msg';
     document.getElementById('auth-page').style.display = 'flex';
     document.getElementById('app-page').style.display = 'none';
 }
@@ -90,9 +97,11 @@ async function login() {
         if (res.ok) {
             const data = await res.json();
             token = data.token; userRole = data.role; loggedInUsername = username;
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', userRole);
-            localStorage.setItem('username', loggedInUsername);
+            isSuperAdmin = (data.role === 'SUPER_ADMIN');
+            sessionStorage.setItem('token', token);
+            sessionStorage.setItem('role', userRole);
+            sessionStorage.setItem('username', loggedInUsername);
+            sessionStorage.setItem('isSuperAdmin', isSuperAdmin);
             showApp();
         } else {
             document.getElementById('login-overlay').style.display = 'none';
@@ -386,10 +395,11 @@ function confirmLogout() {
     // show logging out overlay briefly before clearing
     document.getElementById('logout-overlay').style.display = 'flex';
     setTimeout(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        localStorage.removeItem('username');
-        token = null; userRole = null; loggedInUsername = null; userAccounts = [];
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('role');
+        sessionStorage.removeItem('username');
+        sessionStorage.removeItem('isSuperAdmin');
+        token = null; userRole = null; loggedInUsername = null; isSuperAdmin = false; userAccounts = [];
         document.getElementById('logout-overlay').style.display = 'none';
         showAuth();
     }, 1200);
@@ -443,21 +453,28 @@ async function loadAdminUsers() {
                             <td class="muted">${i + 1}</td>
                             <td>${u}</td>
                             <td class="user-actions">
-                                <button class="btn-change-pw" onclick="showChangePassword('${u}')">Change Password</button>
+                                ${isSuperAdmin ? `<button class="btn-change-pw" onclick="showChangePassword('${u}')">Change Password</button>` : ''}
                                 <button class="btn-delete" onclick="adminDeleteUser('${u}')"
+                                    ${!isSuperAdmin ? 'disabled title="Only super-admin can delete users"' : ''}
                                     ${u === loggedInUsername ? 'disabled title="Cannot delete yourself"' : ''}>Delete</button>
                             </td>
                         </tr>
+                        ${isSuperAdmin ? `
                         <tr id="pw-row-${u}" style="display:none;">
                             <td colspan="3">
                                 <div class="pw-change-form">
-                                    <input type="password" id="pw-input-${u}" placeholder="New password" class="pw-inline-input">
+                                    <div class="pw-input-wrapper">
+                                        <input type="password" id="pw-input-${u}" placeholder="New password" class="pw-inline-input">
+                                        <button class="eye-btn pw-eye-btn" type="button" onclick="togglePassword('pw-input-${u}', this)">
+                                            <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        </button>
+                                    </div>
                                     <button class="btn-admin-sm" onclick="submitChangePassword('${u}')">Save</button>
                                     <button class="btn-cancel-sm" onclick="hideChangePassword('${u}')">Cancel</button>
                                     <span id="pw-msg-${u}" class="pw-msg"></span>
                                 </div>
                             </td>
-                        </tr>
+                        </tr>` : ''}
                     `).join('')}
                 </tbody>
             </table>`;
@@ -470,7 +487,9 @@ function showChangePassword(username) {
 
 function hideChangePassword(username) {
     document.getElementById(`pw-row-${username}`).style.display = 'none';
-    document.getElementById(`pw-input-${username}`).value = '';
+    const input = document.getElementById(`pw-input-${username}`);
+    input.value = '';
+    input.type = 'password';
     document.getElementById(`pw-msg-${username}`).textContent = '';
 }
 
