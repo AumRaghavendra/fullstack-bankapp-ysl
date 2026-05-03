@@ -8,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.bank.bankapp.model.BankAccount;
-import com.bank.bankapp.model.Transaction;
 import com.bank.bankapp.service.BankAccountService;
 import jakarta.validation.Valid;
 
@@ -24,6 +23,15 @@ public class BankAccountController {
             .findFirst()
             .map(a -> a.getAuthority().replace("ROLE_", ""))
             .orElse("USER");
+    }
+
+    private boolean isSuperAdmin(Authentication auth) {
+        return "SUPER_ADMIN".equals(getRole(auth));
+    }
+
+    private boolean isAdminOrSuperAdmin(Authentication auth) {
+        String role = getRole(auth);
+        return "ADMIN".equals(role) || "SUPER_ADMIN".equals(role);
     }
 
     @PostMapping
@@ -91,6 +99,17 @@ public class BankAccountController {
         }
     }
 
+    @PatchMapping("/{accountNumber}/name")
+    public ResponseEntity<?> updateAccountName(@PathVariable String accountNumber,
+                                               @RequestParam String newName,
+                                               Authentication auth) {
+        try {
+            return ResponseEntity.ok(bankAccountService.updateAccountName(accountNumber, newName, auth.getName(), getRole(auth)));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/{accountNumber}")
     public ResponseEntity<?> deleteAccount(@PathVariable String accountNumber, Authentication auth) {
         try {
@@ -102,15 +121,15 @@ public class BankAccountController {
 
     @GetMapping("/admin/users")
     public ResponseEntity<?> getAllUsers(Authentication auth) {
-        if (!"ADMIN".equals(getRole(auth)))
+        if (!isAdminOrSuperAdmin(auth))
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
         return ResponseEntity.ok(bankAccountService.getAllUsernames());
     }
 
     @DeleteMapping("/admin/users/{username}")
     public ResponseEntity<?> deleteUser(@PathVariable String username, Authentication auth) {
-        if (!"ADMIN".equals(getRole(auth)))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
+        if (!isSuperAdmin(auth))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! Only super-admin can delete users.");
         if (username.equals(auth.getName()))
             return ResponseEntity.badRequest().body("You cannot delete your own account!");
         return ResponseEntity.ok(bankAccountService.deleteUser(username));
@@ -120,8 +139,8 @@ public class BankAccountController {
     public ResponseEntity<?> changeUserPassword(@PathVariable String username,
                                                 @RequestParam String newPassword,
                                                 Authentication auth) {
-        if (!"ADMIN".equals(getRole(auth)))
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied!");
+        if (!isSuperAdmin(auth))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied! Only super-admin can change user passwords.");
         if (!newPassword.matches(".*[A-Z].*") ||
             !newPassword.matches(".*[0-9].*") ||
             !newPassword.matches(".*[!@#$%^&*()_+\\-=\\[\\]{}|;':\\\",./<>?].*"))

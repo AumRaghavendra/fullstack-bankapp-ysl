@@ -18,21 +18,22 @@ public class BankAccountService {
     @Autowired UserRepository userRepository;
 
     public BankAccount createAccount(BankAccount account, String username) {
-        // enforce ACC format
-        if (!account.getAccountNumber().toUpperCase().startsWith("ACC")) {
-            throw new RuntimeException("Account number must start with 'ACC' (e.g. ACC001)");
+        // enforce strict ACC prefix (case-insensitive check, but store as-is)
+        String accNum = account.getAccountNumber();
+        if (accNum == null || !accNum.toUpperCase().startsWith("ACC") || accNum.length() <= 3) {
+            throw new RuntimeException("Account number must start with 'ACC' followed by at least one character (e.g. ACC001)");
         }
 
         // global uniqueness check
-        if (bankAccountRepository.findByAccountNumber(account.getAccountNumber()).isPresent()) {
-            throw new RuntimeException("Account number " + account.getAccountNumber() + " already exists!");
+        if (bankAccountRepository.findByAccountNumber(accNum).isPresent()) {
+            throw new RuntimeException("Account number " + accNum + " already exists!");
         }
         account.setUsername(username);
         return bankAccountRepository.save(account);
     }
 
     public List<BankAccount> getAllAccounts(String username, String role) {
-        if ("ADMIN".equals(role)) return bankAccountRepository.findAll();
+        if ("ADMIN".equals(role) || "SUPER_ADMIN".equals(role)) return bankAccountRepository.findAll();
         return bankAccountRepository.findByUsername(username);
     }
 
@@ -42,7 +43,7 @@ public class BankAccountService {
     }
 
     public void verifyOwnership(String accountNumber, String username, String role) {
-        if ("ADMIN".equals(role)) return;
+        if ("ADMIN".equals(role) || "SUPER_ADMIN".equals(role)) return;
         BankAccount account = getAccount(accountNumber);
         if (!account.getUsername().equals(username)) {
             throw new RuntimeException("Access denied — this account does not belong to you!");
@@ -83,6 +84,16 @@ public class BankAccountService {
         transactionRepository.save(new Transaction(fromAccount, "TRANSFER OUT", amount, savedFrom.getBalance()));
         transactionRepository.save(new Transaction(toAccount, "TRANSFER IN", amount, savedTo.getBalance()));
         return "Transferred ₹" + amount + " from " + fromAccount + " to " + toAccount;
+    }
+
+    public BankAccount updateAccountName(String accountNumber, String newName, String username, String role) {
+        verifyOwnership(accountNumber, username, role);
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new RuntimeException("Account holder name cannot be empty!");
+        }
+        BankAccount account = getAccount(accountNumber);
+        account.setAccountHolderName(newName.trim());
+        return bankAccountRepository.save(account);
     }
 
     public String deleteAccount(String accountNumber, String username, String role) {

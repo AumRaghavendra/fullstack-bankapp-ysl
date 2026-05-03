@@ -20,7 +20,6 @@ window.onload = () => {
 }
 
 function showApp() {
-	document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('auth-page').style.display = 'none';
     document.getElementById('app-page').style.display = 'flex';
 
@@ -181,8 +180,19 @@ async function loadAccounts() {
         }
         // pt1 change 2 — added Delete button on each account card
         grid.innerHTML = userAccounts.map(acc => `
-            <div class="account-card">
-                <div class="acc-name">${acc.accountHolderName}</div>
+            <div class="account-card" id="card-${acc.accountNumber}">
+                <div class="acc-card-header">
+                    <div class="acc-name" id="name-display-${acc.accountNumber}">${acc.accountHolderName}</div>
+                    <button class="btn-edit-name" onclick="openEditName('${acc.accountNumber}', '${acc.accountHolderName.replace(/'/g, "\\'")}')" title="Edit name">✎</button>
+                </div>
+                <div class="edit-name-form" id="edit-form-${acc.accountNumber}" style="display:none;">
+                    <input type="text" class="edit-name-input" id="edit-input-${acc.accountNumber}" value="${acc.accountHolderName}">
+                    <div class="edit-name-actions">
+                        <button class="btn-admin-sm" onclick="submitEditName('${acc.accountNumber}')">Save</button>
+                        <button class="btn-cancel-sm" onclick="closeEditName('${acc.accountNumber}')">Cancel</button>
+                    </div>
+                    <div class="edit-name-msg" id="edit-msg-${acc.accountNumber}"></div>
+                </div>
                 <div class="acc-number">${acc.accountNumber}</div>
                 <div class="acc-balance">₹${acc.balance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
                 <div class="acc-balance-label">Available Balance</div>
@@ -199,6 +209,10 @@ async function createAccount() {
     const accNum = document.getElementById('create-accnum').value.trim();
     const balance = document.getElementById('create-balance').value;
     if (!accNum) { showMsg('create-msg', '✗ Account number cannot be empty.', 'error'); return; }
+    if (!accNum.toUpperCase().startsWith('ACC') || accNum.length <= 3) {
+        showMsg('create-msg', '✗ Account number must start with "ACC" followed by at least one character (e.g. ACC001).', 'error');
+        return;
+    }
     try {
         const res = await fetch(`${API}/accounts`, {
             method: 'POST', headers: authHeaders(),
@@ -293,6 +307,41 @@ async function loadHistory() {
             </div>
         `).join('');
     } catch (e) { list.innerHTML = '<div class="empty-state">Could not load history.</div>'; }
+}
+
+// ===== EDIT ACCOUNT NAME =====
+
+function openEditName(accountNumber, currentName) {
+    document.getElementById(`edit-form-${accountNumber}`).style.display = 'block';
+    document.getElementById(`edit-input-${accountNumber}`).focus();
+}
+
+function closeEditName(accountNumber) {
+    document.getElementById(`edit-form-${accountNumber}`).style.display = 'none';
+    document.getElementById(`edit-msg-${accountNumber}`).textContent = '';
+}
+
+async function submitEditName(accountNumber) {
+    const input = document.getElementById(`edit-input-${accountNumber}`);
+    const msgEl = document.getElementById(`edit-msg-${accountNumber}`);
+    const newName = input.value.trim();
+    if (!newName) { msgEl.textContent = '✗ Name cannot be empty.'; msgEl.className = 'edit-name-msg error'; return; }
+    try {
+        const res = await fetch(`${API}/accounts/${accountNumber}/name?newName=${encodeURIComponent(newName)}`, {
+            method: 'PATCH', headers: authHeaders()
+        });
+        if (res.ok) {
+            closeEditName(accountNumber);
+            await loadAccounts();
+            populateDropdowns();
+        } else {
+            msgEl.textContent = '✗ ' + await res.text();
+            msgEl.className = 'edit-name-msg error';
+        }
+    } catch (e) {
+        msgEl.textContent = '✗ Could not connect.';
+        msgEl.className = 'edit-name-msg error';
+    }
 }
 
 // ===== DELETE ACCOUNT MODAL (pt1 change 3) =====
